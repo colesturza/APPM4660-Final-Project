@@ -26,16 +26,19 @@ h = x(1,1) - x(1, 2);  % h is the same in both the y and x direction
 
 rhs = h^2 * f(x(2:end-1, 2:end-1), y(2:end-1, 2:end-1));
 
+% generate the eigenvalues
 [k, l] = size(rhs);
 L = 2*(1-cos((1:k)*pi/(k+1))) + 2*(1-cos((1:l)*pi/(l+1))); 
 LL = diag(1./L);
 
+% U = Q * inv(Λ) * Q * B
 rhs1 = fast_sine_transform(rhs);
-rhs1 = fast_sine_transform(rhs1');
+rhs1 = fast_sine_transform(rhs1');  % need to perform fft on rows and cols
 rhs2 = LL * rhs1;
 rhs2 = fast_sine_transform(rhs2);
 sol = fast_sine_transform(rhs2');
 
+% add back in the boundary conditions
 uapp = [alpha * ones(1, l); sol; beta * ones(1, l)];
 uapp = [gamma * ones(k+2, 1) uapp delta * ones(k+2, 1)];
 
