@@ -1,11 +1,11 @@
 clear
 close all
 
-% -u_xx - u_yy = 2sin(x)sin(y)
-% u = sin(x)sin(y)
+% -u_xx - u_yy = sin(x) + 4*sin(2*y)
+% u = sin(x) + sin(2*y)
 
-u = @(x, y) sin(x).*sin(y);  % actual solution
-f = @(x, y) 2 * sin(x).*sin(y); % rhs of PDE
+u = @(x, y) sin(x) + sin(2.*y);  % actual solution
+f = @(x, y) sin(x) + 4.*sin(2.*y); % rhs of PDE
 
 N = 100;
 
@@ -14,22 +14,26 @@ b = 2*pi;
 c = 0;
 d = 2*pi;
 
-alpha = 0 * ones(N, 1);
-beta = 0 * ones(N, 1);
-gamma = 0 * ones(1, N);
-delta = 0 * ones(1, N);
-
 [x, y] = meshgrid(linspace(a, b, N), linspace(a, b, N));
 h = x(1,1) - x(1, 2);  % h is the same in both the y and x direction
 
-% K = diag(2*ones(N-2,1))-diag(ones(N-3,1),-1)-diag(ones(N-3,1),1);
-% K2D = kron(eye(N), K) + kron(K, eye(N));
+alpha = u(x(:, 1), y(:, 1));
+beta = u(x(:, end), y(:, end));
+gamma =  u(x(1, :), y(1, :));
+delta =  u(x(end, :), y(end, :));
 
 B = (h^2).*f(x(2:end-1, 2:end-1), y(2:end-1, 2:end-1));
 B(:, 1) = B(:, 1) + alpha(2:end-1);
 B(:, end) = B(:, end) + beta(2:end-1);
 B(1, :) = B(1, :) + gamma(2:end-1);
 B(end, :) = B(end, :) + delta(2:end-1);
+
+% slow way (works)
+% K = diag(2*ones(N-2,1))-diag(ones(N-3,1),-1)-diag(ones(N-3,1),1);
+% K2D = kron(eye(N-2), K) + kron(K, eye(N-2));
+% rhs = reshape(rhs, [(N-2)^2, 1]);
+% sol = K2D\rhs;
+% sol = reshape(sol, [N-2, N-2]);
 
 n = N-2;
 
