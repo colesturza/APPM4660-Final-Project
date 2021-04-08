@@ -19,7 +19,7 @@ beta = 0 * ones(N, 1);
 gamma = 0 * ones(1, N);
 delta = 0 * ones(1, N);
 
-[x, y] = meshgrid(linspace(a, b, N), linspace(a, b, N));
+[x, y] = meshgrid(linspace(a, b, N), linspace(c, d, N));
 h = x(1,1) - x(1, 2);  % h is the same in both the y and x direction
 
 % K = diag(2*ones(N-2,1))-diag(ones(N-3,1),-1)-diag(ones(N-3,1),1);

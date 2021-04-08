@@ -14,7 +14,7 @@ b = 2*pi;
 c = 0;
 d = 2*pi;
 
-[x, y] = meshgrid(linspace(a, b, N), linspace(a, b, N));
+[x, y] = meshgrid(linspace(a, b, N), linspace(c, d, N));
 h = x(1,1) - x(1, 2);  % h is the same in both the y and x direction
 
 alpha = u(x(:, 1), y(:, 1));
