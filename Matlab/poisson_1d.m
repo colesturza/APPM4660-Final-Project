@@ -25,25 +25,18 @@ rhs(end) = rhs(end) + beta;
 % [S, Lam] = eig(K);  % remove later
 % sol = S * inv(Lam) * inv(S) * b';  % inefficient way fast solver
 
-n = length(rhs);
-L = 2*(1-cos((1:n)*pi/(n+1))); 
-LL = diag(1./L);
+n = N-2;
 
-% i = (1:n)';
-% ii = i * i';
-% S = sin(ii*pi/(n+1)) * sqrt(2/(n+1));  % extra term makes eigenvectors orthonormal
+% generate the eigenvalues
+lambda = zeros(n,1);
+for i=1:n
+   lambda(i) = 2*(1-cos(pi*i/(n+1)));
+end
+L = lambda;
 
-% sol = S * LL * inv(S) * b';  % inefficient way fast solver
-
-% norm(fast_sine_transform(b') - inv(S) * b')
-
-% v = fast_sine_transform(b');
-% y = inv(S) * b';
-% semilogy(x(2:end-1), abs(v), x(2:end-1), abs(y));
-
-b1 = fast_sine_transform(rhs');
-b2 = LL * b1;
-sol = fast_sine_transform(b2);
+b_prime = fast_sine_transform(rhs');
+u_prime = b_prime ./ L;
+sol = fast_sine_transform(u_prime);
 
 uapp =[alpha; sol; beta];
 
