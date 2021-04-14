@@ -5,7 +5,7 @@ function test_int_fixed2
 
 %%% Set the geometry.
 % flag_geom    = 'clover';
-flag_geom = 'pacman';
+flag_geom = 'square';
 
 
 % tt = linspace(0,2*pi);
@@ -14,25 +14,43 @@ N = 100;
 %I want to use the gauss lengendre nodes, but scaled to go form 0 to 2pi
 
 
-list = createInterval([-.5, -.45, -.4, -.2, 0, .2, .4, .45, .5], 30);
-disp(length(list))
-[tt, w] = makeGaussianNodes(list, 10);
+% list = createInterval([-.5, -.45, -.4, -.2, 0, .2, .4, .45, .5], 30);
+% disp(length(list))
+% [tt, w] = makeGaussianNodes(list, 10);
 
+tt = 0:.01:4;
+%%Otherwise this will end up counting the last point twice.
+tt = tt(1:end-1);
+
+%%Gaussian Panels
+
+%[tt, w] = lgwt(20, 0, 4);
 keyboard;
 [C,ww] = make_geom(tt,flag_geom);
-ww = w.'.*ww;
+ww = ww*.01;
+
+%ww = w.'.*ww;
+
+keyboard;
 
 
 %  validates arclength of circle
 %abs(sum(ww)-2*pi)
 
-x_src = [10;10];
+x_src = [1.4;.5];
 
-x_trg = [.5;0];
+
+
+[x, y] = meshgrid(0.01:.01:1-.01, 0.01:.01:1-.01);
+
+points = [x(:), y(:)];
+keyboard;
+
+x_trg = points.';
 
 
  A = LOCAL_construct_A_diag(C,ww);
-
+keyboard;
 
 g = make_bdry(C,x_src);
 
@@ -51,7 +69,7 @@ hold on;
 scatter(C(1, :), C(4, :), 4, 'filled');
 axis equal
 disp(norm(uapp - uex))
-
+mesh(x, y, reshape(uapp, length(x), length(x)))
 
 keyboard
 return
@@ -176,6 +194,24 @@ C(4,:) = (cos(3*t)+2).*sin(t);
 C(5,:) = (-3*sin(3*t).*sin(t)+(cos(3*t)+2).*cos(t));
 
 
+elseif(strcmp(flag_geom,'unit-square'))
+X = 2;
+Y = 2;
+x0 = 0;
+y0 = 0;
+    
+    
+C(1,:) = cos(t).*sec(t - pi/2*floor((4*t + pi)/(2*pi)))*X/2 + x0;
+C(4,:) = sin(t).*sec(t - pi/2*floor((4*t + pi)/(2*pi)))*Y/2 + y0;
+
+elseif(strcmp(flag_geom,'square'))
+    
+C(1, :) = [t(0 <= t & t < 1), ones(1, length(t(1 <= t & t < 2))), 3 - t(2 <= t & t < 3), zeros(1, length(t(3 <= t & t <= 4)))]; 
+C(2, :) = [ones(1, length(t(0 <= t & t < 1))), zeros(1, length(t(1 <= t & t < 2))), -ones(1, length(t(2 <= t & t < 3))), zeros(1, length(t(3 <= t & t <= 4)))];
+C(3, :) = zeros(1, length(C(1, :)));
+C(4, :) = [zeros(1, length(t(0 <= t & t < 1))), t(1 <= t & t < 2) - 1, ones(1, length(t(2 <= t & t < 3))), 4 - t(3 <= t & t <= 4)];
+C(5, :) = [zeros(1, length(t(0 <= t & t < 1))), ones(1, length(t(1 <= t & t < 2))), zeros(1, length(t(2 <= t & t < 3))), -ones(1, length(t(3 <= t & t <= 4)))];
+C(6, :) = zeros(1, length(C(1, :)));
 elseif(strcmp(flag_geom,'star'))
 % starfish
 tt = t;

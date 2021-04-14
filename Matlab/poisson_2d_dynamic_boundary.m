@@ -47,6 +47,7 @@ L = lambda + lambda';
 % U = Q * inv(Λ) * Q * B
 B_prime = fast_sine_transform(B);
 B_prime = fast_sine_transform(B_prime');  % need to perform fft on rows and cols
+keyboard;
 U_prime = B_prime ./ L;
 U_prime = fast_sine_transform(U_prime);
 U = fast_sine_transform(U_prime');

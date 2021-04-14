@@ -42,4 +42,4 @@ Ucir((x - pi).^2 + (y - pi).^2 > pi) = NaN;
 Utri((y) - x > 0) = NaN;
 
 
-mesh(x, y, Utri)
+mesh(x, y, Ucirc)
