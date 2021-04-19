@@ -17,7 +17,7 @@ d = 1;
 h = x(1,1) - x(1, 2);  % h is the same in both the y and x direction
 
 
-x_src = [0.25 0.75];
+x_src = [1.25 1.75];
 
 points = [x(:), y(:)];
 x_trg = points.';

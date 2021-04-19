@@ -17,7 +17,7 @@ d = 1;
 h = x(1,1) - x(1, 2);  % h is the same in both the y and x direction
 
 
-x_src = [0.25 0.75];
+x_src = [1.25 1.75];
 
 points = [x(:), y(:)];
 x_trg = points.';
@@ -46,7 +46,9 @@ e = ones(n, 1);
 K = diag(-e(1:end-1), -1) + diag(2*e) + diag(-e(1:end-1), 1);
 K2D = kron(eye(n), K) + kron(K, eye(n));
 
-uapp = jacobi(K2D, B, 500);
+% uapp = K2D \ B;
+
+uapp = jacobi(K2D, B, 2500);
 
 uapp = reshape(uapp, [n, n]);
 
