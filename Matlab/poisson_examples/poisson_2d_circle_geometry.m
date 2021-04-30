@@ -4,15 +4,15 @@ close all
 % -u_xx - u_yy = sin(x) + 4*sin(2*y)
 % u = sin(x) + sin(2*y)
 
-u = @(x, y) sin(x) + sin(2.*y);  % actual solution
-f = @(x, y) sin(x) + 4.*sin(2.*y); % rhs of PDE
+u = @(x, y) exact_solution(x, y);  % actual solution
+f = @(x, y) density(x, y); % rhs of PDE
 
 N = 100;
 
 a = 0;
-b = 2*pi;
+b = 5;
 c = 0;
-d = 2*pi;
+d = 5;
 
 [x, y] = meshgrid(linspace(a, b, N), linspace(c, d, N));
 h = x(1,1) - x(1, 2);  % h is the same in both the y and x direction
@@ -61,6 +61,8 @@ figure(1)
 mesh(x, y, uapp)
 figure(2)
 mesh(x, y, abs(uapp-uex))
+figure(3)
+mesh(x, y, uex)
 
 % fast sine transform for a matrix V
 function Y = fast_sine_transform(V)
@@ -72,4 +74,14 @@ function Y = fast_sine_transform(V)
     V_ext = [zeros(1,m); V; zeros(n+1,m)];
     V_ext = imag(fft(V_ext));
     Y = const.*V_ext(2:n+1, :);
+end
+
+function Z = density(X, Y)
+    Z = sin(X) + 4.*sin(2.*Y);
+    Z((X - 3).^2 + (Y - 3).^2 > 1) = 0;
+end
+
+function Z = exact_solution(X, Y)
+    Z = sin(X) + sin(2.*Y);
+    Z((X - 3).^2 + (Y - 3).^2 > 1) = 0;
 end
