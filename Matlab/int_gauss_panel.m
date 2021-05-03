@@ -5,12 +5,17 @@ function test_int_fixed2
 
 %%% Set the geometry.
 % flag_geom    = 'clover';
-flag_geom = 'square';
+%flag_geom = 'square';
+flag_geom = 'star';
 
-
-% tt = linspace(0,2*pi);
+% tt = linspace(0,2*pi, 100);
+% 
+% C = make_geom(tt, 'circle');
+% scatter(C(1, :), C(4, :), 4, 'filled');
+% axis equal;
+% keyboard;
 % tt = tt(1:end-1);
-N = 100;
+
 %I want to use the gauss lengendre nodes, but scaled to go form 0 to 2pi
 
 
@@ -18,62 +23,159 @@ N = 100;
 % disp(length(list))
 % [tt, w] = makeGaussianNodes(list, 10);
 
-tt = 0:.01:4;
-%%Otherwise this will end up counting the last point twice.
-tt = tt(1:end-1);
 
+
+t = linspace(0, 2*pi, 100);
+% t1 = [0, 1];
+% 
+% t1 = refineInterval(t1, 12, 8);
+% 
+% t = [t1(t1 < .0625), .0625:.0625:.9375, t1(t1>.9375)];
+% 
+% t = unique([t, t + 1, t + 2, t + 3]);
+
+[tt, w] = makeGaussianNodes(t, 20);
+
+
+
+
+
+%tt = 0:.01:4;
+%%Otherwise this will end up counting the last point twice.
+%tt = tt(1:end-1);
+%tt = tt.';
 %%Gaussian Panels
+%t = [0, .5, 1, 1.5, 2,2.5, 3,3.5, 4];
+
+%[tt, w] = refineInterval(t, 8, 16);
 
 %[tt, w] = lgwt(20, 0, 4);
-keyboard;
-[C,ww] = make_geom(tt,flag_geom);
-ww = ww*.01;
 
-%ww = w.'.*ww;
+[C,ww] = make_geom(tt.',flag_geom);
 
-keyboard;
+
+
+%%%%Particular Solution Test
+
+
+
+% PartC = zeros(1, length(C));
+% 
+% for i = 1:length(C)
+%    PartC(i) = naiveIntegral([C(1, i); C(4, i)], @testDensity); 
+% end
+
+
+
+%%%%%Actual Solution;
+
+
+
+
+%ww = ww*.01;
+
+ww = w.'.*ww;
+
+
 
 
 %  validates arclength of circle
 %abs(sum(ww)-2*pi)
 
-x_src = [1.4;.5];
+x_src = [-.3;-.75];
 
 
 
-[x, y] = meshgrid(0.01:.01:1-.01, 0.01:.01:1-.01);
+[x, y] = meshgrid(-2:.02:2, -2:.02:2);
 
 points = [x(:), y(:)];
-keyboard;
 
 x_trg = points.';
 
 
- A = LOCAL_construct_A_diag(C,ww);
-keyboard;
+A = LOCAL_construct_A_diag(C,ww);
 
-g = make_bdry(C,x_src);
+%g = make_bdry(C,x_src);
+
+g = make_refsoln_poisson2([C(1, :); C(4, :)], x_src).';
+
+%g = 0;
+
+% g = g - PartC.';
 
 % solve for boundary charge density
 
 sigma = A\g;
 
 % evaluate the solution at the target
-uex = make_refsoln(x_trg,x_src);
+%uex = make_refsoln(x_trg,x_src);
+
+uex = make_refsoln_poisson2(x_trg, x_src).';
+index = sort(randperm(length(C), 300));
+T = scale(polyshape(C(1,index).',C(4, index).'), .9);
+
+in = isinterior(T, points);
+keyboard;
 
 uapp = LOCAL_evalpot(x_trg,C,sigma,ww);
-
+uapp(in == 0) = NaN;
+uex(in == 0) = NaN;
+keyboard;
 clf;
 figure(1)
 hold on;
 scatter(C(1, :), C(4, :), 4, 'filled');
-axis equal
-disp(norm(uapp - uex))
-mesh(x, y, reshape(uapp, length(x), length(x)))
+axis square
 
-keyboard
+
+% Z = zeros(1, length(points));
+% for i = 1:length(points)
+%     Z(1, i) = naiveIntegral(points(i, :).', @testDensity);
+% end
+%image(points(:,1), points(:, 2), reshape(uapp, length(x), length(x)) + reshape(Z, length(x), length(x)));
+mesh(x, y, reshape(uapp, length(x), length(x)))
+% figure(2)
+% scatter(C(1, :), C(4, :), 4, 'filled');
+%mesh(x, y, abs(reshape(uapp  + Z.' - uex, length(x), [])))
+
+figure
+hold on;
+scatter(C(1, :), C(4, :), 4, 'filled');
+mesh(x, y, reshape(abs(uapp - uex), length(x), length(x)));
+axis square;
+
+keyboard;
 return
 end
+
+function uex = make_refsoln_poisson1(x)
+    
+    uex = sin(pi*x(1, :)).*sin(pi*x(2, :));
+    
+end
+
+function uex = make_refsoln_poisson2(x, x_src)
+    uex = log((x(1, :) - x_src(1)).^2 + (x(2, :) - x_src(2)).^2);
+    
+end
+
+
+function output = naiveIntegral(x, density)
+    func = @(x, y1, y2) (-density(y1, y2).*fundamentalSol(x, y1, y2));
+    output = integral2(@(y1, y2)func(x, y1, y2), 0, 1, 0, 1, 'Method', 'tiled', 'AbsTol', 1e-15);
+end
+
+function output = testDensity(x, y)
+    %output = -2*pi^2*sin(pi*x).*sin(pi*y);
+    output = exp(x) + 18*pi^2*sin(6*pi*y);
+end
+
+function output = fundamentalSol(x, y1, y2)
+    points = [y1(:) - x(1), y2(:) - x(2)];
+    
+    output = reshape(-log(vecnorm(points.'))/(2*pi), size(y1));
+end
+
 
 function vv = LOCAL_evalpot(x_trg,C,sigma,ww)
 
@@ -89,8 +191,10 @@ Y_dg2 = ones(m,1)*C(5,:);
 ww    = ones(m,1)*ww;
 
 EVAL = LOCAL_eval_kernel(X_g1,Y_g1,X_g2,Y_g2,Y_dg1,Y_dg2);
+
 EVAL = EVAL.*ww;      
 vv   = EVAL*sigma;
+keyboard;
 
 return
 end
@@ -131,8 +235,9 @@ function uex = make_refsoln(x_trg,x_src)
 N = size(x_trg,2);
 
 
-dd1 = (x_src(1)-x_trg(1)).^2;
-dd2 = (x_src(2)-x_trg(2)).^2;
+
+dd1 = (x_src(1)-x_trg(1, :)).^2;
+dd2 = (x_src(2)-x_trg(2, :)).^2;
 uex = -1/(2*pi)*log(sqrt(dd1+dd2)).';
 
 return
@@ -149,10 +254,12 @@ function [tNodes, wNodes] = makeGaussianNodes(list, numNodes)
       nodesAtList(:) = numNodes(1,1); 
    end
     [tNodes, wNodes] = lgwt(nodesAtList(1), list(1), list(2));
+    tNodes = tNodes(end:-1:1);
+    wNodes = wNodes(end:-1:1);
    for i = 2:Nnodes
         [a, b] = lgwt(nodesAtList(i), list(i), list(i + 1));
-        tNodes = [tNodes; a];
-        wNodes = [wNodes; b];
+        tNodes = [tNodes; a(end:-1:1)];
+        wNodes = [wNodes; b(end:-1:1)];
    end
 end
 
@@ -273,6 +380,7 @@ d_vec = (-C(6,:).*C(2,:) + C(3,:).*C(5,:))./...
         ((4*pi)*(C(2,:).^2 + C(5,:).^2).^1.5); %rmk 12.2
 B     = B + diag(d_vec);
 B     = B.*(ones(N,1)*ww) - 0.5*eye(N);
+keyboard;
 return
 
 end
